@@ -7,18 +7,23 @@ class Block
 public:
 	GLuint vaoID;
 	GLuint vboID;
+	GLuint colorvboID;
 	GLfloat vxn[36] = { 0 };
-
+	GLfloat color[3];
 	Block()
 	{
-		vxn[1] = 0.1; vxn[5] = 1;
-		vxn[6] = 0.1; vxn[11] = 1;
+		vxn[1] = 0.1f; vxn[5] = 1;
+		vxn[6] = 0.1f; vxn[11] = 1;
 		vxn[17] = 1;
 
-		vxn[19] = 0.1; vxn[23] = 1;
-		vxn[24] = 0.1; vxn[25] = 0.1; vxn[29] = 1;
-		vxn[30] = 0.1; vxn[35] = 1;
-	
+		vxn[19] = 0.1f; vxn[23] = 1;
+		vxn[24] = 0.1f; vxn[25] = 0.1f; vxn[29] = 1;
+		vxn[30] = 0.1f; vxn[35] = 1;
+		
+		// the color 121, 7, 250
+		color[0] = 121.0f / 255;
+		color[1] = 7.0f / 255;
+		color[2] = 250.0f / 255;
 		
 	}
 
