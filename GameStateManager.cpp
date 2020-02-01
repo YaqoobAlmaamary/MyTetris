@@ -2,7 +2,14 @@
 
 void GameStateManager::display()
 {
-	engine.render( &board );
+	if ( state == 0 )
+		 displayMainMenu();
+	if ( state == 1 )
+		 displayOptionMenu();
+	if ( state == 2 )
+		engine.render( &board );
+	if ( state == 3 )
+		 displayGameOver();
 }
 
 void GameStateManager::keyPress( unsigned char key, int x, int y )
@@ -44,13 +51,14 @@ void GameStateManager::run()
 void GameStateManager::startEngine()
 {
 	engine.initData();
+	engine.initMenus( board.getColumns() * 0.1, board.getRows() * 0.1 );
 }
 
 bool GameStateManager::leftBoundary()
 {
 	Shapes* currentShape = board.getCurrentShape();
 	bool** cells = board.getCells();
-	// check if any of the blocks column location is 0
+	// check if any of the blocks column location is 0 (checking left boundary)
 	for ( int i = 0; i < 4; i++ )
 	{
 		if ( currentShape->blockLocationColumn[i] == 0 )
@@ -75,7 +83,7 @@ bool GameStateManager::rightBoundary()
 {
 	Shapes* currentShape = board.getCurrentShape();
 	bool** cells = board.getCells();
-	// check if any of the blocks column location is number of columns - 1
+	// check if any of the blocks column location is number of columns - 1 (checking right boundary)
 	for ( int i = 0; i < 4; i++ )
 	{
 		if ( currentShape->blockLocationColumn[i] == board.getColumns() - 1 )
@@ -125,7 +133,6 @@ void GameStateManager::doMovement()
 void GameStateManager::generateShape()
 {
 	board.generateShape();
-
 }
 
 void GameStateManager::placeShape()
@@ -136,86 +143,89 @@ void GameStateManager::placeShape()
 bool GameStateManager::deleteFilledRows()
 {
 	// this algorithm will remove the rows filled when a
-	// current shape has been added to that row
-	Shapes* currentShape = board.getCurrentShape();
+	// current shape has been added
 	bool** cells = board.getCells();
+	int rows = board.getRows();
 	int columns = board.getColumns();
-	int rows[4];
 	bool result = false;
+	bool flag;
 
-	// get the rows for the current shape
-	for ( int i = 0; i < 4; i++ )
-	{
-		rows[i] = currentShape->blockLocationRow[i];
-	}
-
-	// check if a row is filled
-	bool flag = true; // will be true if a row in the board is filled with 1s
-	for ( int i = 0; i < 4; i++ ) // for each row where the current shape is
+	// iterate through rows to find filled blocks
+	// if found then delete
+	for ( int i = 0; i < rows; i++ ) // for each row
 	{
 		flag = true;
-		for ( int j = 0; j < columns; j++ ) // for each column in that row
+		for ( int j = 0; j < columns; j++ ) // for each column
 		{
-			if ( cells[j][rows[i]] == 0 ) // if a row contains a 0 then that row isnt filled
+			if ( cells[j][i] == 0 ) // check if cell equals to 0
 			{
+				// if true then that row isnt filled
 				flag = false;
 				break;
 			}
 		}
 
-		if ( flag ) // only true if row is filled
+		if ( flag ) // will only enter if a row is filled
 		{
-			// it will enter the block only if a row is filled with
-			// 1s as a result it will turn that row into 0s
-			for ( int currentColumn = 0; currentColumn < columns; currentColumn++ )
+			
+			// start deleting data by changing current data
+			// in that row to 0s
+			for ( int j = 0; j < columns; j++ )
 			{
-				cells[currentColumn][rows[i]] = 0;
+				cells[j][i] = 0;
 			}
-			result = true;
+			result = true; // a row was successfully deleted
+			leaderboard.incrementScore();
 		}
 	}
+
+
 	return result;
 }
 
 void GameStateManager::shiftBlocksDown()
 {
-	// this algorithm will search the rows empty after row deletion
-	Shapes* currentShape = board.getCurrentShape();
 	bool** cells = board.getCells();
-	int totalColumns = board.getColumns();
-	int totalRows = board.getRows();
-	int rows[4];
+	int rows = board.getRows();
+	int columns = board.getColumns();
+	bool isEmpty;
 
-	// get the rows for the current shape
-	for ( int i = 0; i < 4; i++ )
+	// iterate through the rows to find empty rows
+	for ( int i = rows; i >= 0; i-- ) // for each row
 	{
-		rows[i] = currentShape->blockLocationRow[i];
-	}
-
-	// check if a row is filled
-	bool flag = true; // will be true if a row in the board is filled with 1s
-	for ( int i = 0; i < 4; i++ ) // for each row where the current shape is
-	{
-		flag = true;
-		for ( int j = 0; j < totalColumns; j++ ) // for each column in that row
+		isEmpty = true;
+		// iterate through the columns
+		for ( int j = 0; j < columns; j++ )
 		{
-			if ( cells[j][rows[i]] == 1 ) // if a row contains a 1 then that row isnt empty
+			// for each column check if it contains a 1 in that cell (column, row)
+			// if yes then that row isnt empty
+			if ( cells[j][i] == 1 )
 			{
-				flag = false;
+				isEmpty = false;
 				break;
 			}
 		}
 
-		if ( flag ) // only true if row is empty
+		// if this row is empty
+		if ( isEmpty )
 		{
-			// it will enter the block only if a row is filled with
-			// 0s as a result it will push the above blocks down
-			for ( int currentRow = rows[i]; currentRow < totalRows - 1; currentRow++ )
+			// if a row is empty copy data from the above row to the current
+			// until it reached one row from the top
+			// for each row on top of the empty row
+			for ( int someRow = i; someRow < rows - 1; someRow++ )
 			{
-				for ( int currentColumn = 0; currentColumn < totalColumns; currentColumn++ )
+				// for a cell with position (someColumn, someRow)
+				for ( int someColumn = 0; someColumn < columns; someColumn++ )
 				{
-					cells[currentColumn][currentRow] = cells[currentColumn][currentRow + 1];
+					cells[someColumn][someRow] = cells[someColumn][someRow + 1];
 				}
+			}
+
+			// after copying data from the row above
+			// the top row will be duplicated as a result will be turn into 0s
+			for ( int someColumn = 0; someColumn < columns; someColumn++ )
+			{
+				cells[someColumn][rows - 1] = 0;
 			}
 		}
 	}
@@ -223,6 +233,7 @@ void GameStateManager::shiftBlocksDown()
 
 bool GameStateManager::isEndGame()
 {
+	// checks if the current shape overlaps a block on the board
 	Shapes* currentShape = board.getCurrentShape();
 	bool** cells = board.getCells();
 
@@ -234,4 +245,160 @@ bool GameStateManager::isEndGame()
 		}
 	}
 	return false;
+}
+
+// this is according to game logic flow diagram
+void GameStateManager::playGame() {
+	end = std::chrono::system_clock::now();// get current time
+	glDuration = end - glTimeStamp; // calculate time taken for block drawing
+	sdDuration = end - sdTimeStamp;
+
+	if ( glDuration.count() >= 1.0 / 60 && flag )// did the frame took 1/60 of a second
+	{
+		// if yes do game logic
+		glTimeStamp = current;
+		// start for game logic discussed in Game flow logic diagram
+
+		// check right boundary
+		if ( rightBoundary() )
+		{
+			inputManager.unlogKey( 'd' );
+			inputManager.unlogKey( 'w' );
+		}
+
+		// check left boundary
+		if ( leftBoundary() )
+		{
+			inputManager.unlogKey( 'a' );
+			inputManager.unlogKey( 'w' );
+		}
+
+		// do Movement
+		doMovement();
+		// unlog all keys
+		inputManager.unlogKeys();
+
+		// check if one second has passed
+		if ( sdDuration.count() >= 1.0 / speed )
+		{
+			frames = 0;
+			// check bottom boundary
+			if ( bottomBoundary() )
+			{
+				placeShape();
+				//delete filled rows
+				if ( deleteFilledRows() )
+				{
+					// shift all blocks down when a row is deleted
+					shiftBlocksDown();
+				}
+				generateShape();
+				printf( "your current score is %i\n", leaderboard.getScore() );
+				// check if game over
+				if ( isEndGame() )
+				{
+					printf( "Game over son\n" );
+					leaderboard.saveScore( "jacob" );
+					flag = false;
+					state = 3;
+				}
+			}
+			else
+			{
+				board.shiftShapeDown();
+			}
+			sdTimeStamp = current;
+		}
+	}
+	frames++;
+	// redraw 
+	glutPostRedisplay();
+}
+
+void GameStateManager::processMenu( int x, int y )
+{
+	y = engine.windowHeight - y; // done because the y starts from the top of the window not the bottom
+	float worldx = engine.projectWindowWidth * (float)x / (float)engine.windowWidth - (engine.camerax - 0.5); // click position in the world coordinates
+	float worldy = engine.projectWindowHeight * (float)y / (float)engine.windowHeight;
+
+	// in main menu
+	if ( state == 0 ) 
+	{
+		int result = inputManager.processMenu( worldx, worldy, engine.main ); // returns the index of the button
+		switch ( result )
+		{
+		case 0: // play game
+			board.restartBoard();
+			flag = true;
+			state = 2;// state to play game
+			break;
+		case 1:// option menu
+			state = 1;// state is option menu
+			break;
+		case 2:// quit game
+			state = 4;// state is quit game
+			break;
+		}
+	}
+	// option menu
+	else if ( state == 1 )
+	{
+		int result = inputManager.processMenu( worldx, worldy, engine.option ); // returns the index of the button
+		switch ( result )
+		{
+		case 0: // apply options
+			state = 0;// state to main menu
+			break;
+		case 1:// easy mode
+			speed = 1;
+			state = 0;
+			break;
+		case 2:// medium mode
+			speed = 4;
+			state = 0;
+			break;
+		case 3:// hard mode
+			speed = 10;
+			state = 0;
+			break;
+
+		}
+	}
+	// game over menu
+	else if ( state == 3 )
+	{
+		int result = inputManager.processMenu( worldx, worldy, engine.gameOver ); // returns the index of the button
+		switch ( result )
+		{
+		case 0: // play game
+			board.restartBoard();
+			flag = true;
+			leaderboard.saveScore( "jacob" );
+			leaderboard.resetCurrentScore();
+			state = 2;// state to play game
+			break;
+		case 1:// main menu menu
+			state = 0;// state is option menu
+			break;
+		case 2:// quit game
+			state = 4;// state is quit game
+			break;
+		}
+	}
+
+}
+
+void GameStateManager::displayMainMenu()
+{
+	engine.renderMenu( engine.main );
+}
+
+void GameStateManager::displayOptionMenu()
+{
+	engine.renderMenu( engine.option );
+}
+
+void GameStateManager::displayGameOver()
+{
+	engine.renderMenu( engine.gameOver );
 }

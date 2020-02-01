@@ -3,92 +3,48 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 #include "GameStateManager.h"
-#include <chrono>
 
 GameStateManager bigBoss = GameStateManager();
-std::chrono::system_clock::time_point end;
-std::chrono::system_clock::time_point current;
-std::chrono::system_clock::time_point glTimeStamp; // game loop time stamp
-std::chrono::system_clock::time_point sdTimeStamp; // shift dowm time stamp
-std::chrono::duration<float> glDuration; // duration for the game loop
-std::chrono::duration<float> sdDuration; // duration for the shift down statment
-bool flag = true;
 
 void display()
 {
-	current = std::chrono::system_clock::now(); // get the current time
-	bigBoss.display(); // draw blocks
+	bigBoss.current = std::chrono::system_clock::now(); // get the current time
+	bigBoss.display();
 	
 }
 
 void keyboard( unsigned char key, int x, int y )
 {
-	bigBoss.inputManager.logKey( key );
+	if ( bigBoss.state == 2 )
+		bigBoss.inputManager.logKey( key );
 }
 
 void idle()
 {
-	end = std::chrono::system_clock::now();// get current time
-	glDuration = end - glTimeStamp; // calculate time taken for block drawing
-	sdDuration = end - sdTimeStamp;
-	
-	if ( glDuration.count() >= 1.0 / 60 && flag )// did the frame took 1/60 of a second
+	if ( bigBoss.state == 2 ) // gameplay state (the game started)
 	{
-		// if yes do game logic
-		glTimeStamp = current;
-		// start for game logic discussed in Game flow logic diagram
-
-		// check right boundary
-		if ( bigBoss.rightBoundary() )
-		{
-			bigBoss.inputManager.unlogKey( 'd' );
-			bigBoss.inputManager.unlogKey( 'w' );
-		}
-
-		// check left boundary
-		if ( bigBoss.leftBoundary() )
-		{
-			bigBoss.inputManager.unlogKey( 'a' );
-			bigBoss.inputManager.unlogKey( 'w' );
-		}
-
-		// do Movement
-		bigBoss.doMovement();
-		// unlog all keys
-		bigBoss.inputManager.unlogKeys();
-
-		// check if one second has passed
-		if ( sdDuration.count() >= 1.0 / 1 )
-		{
-			// check bottom boundary
-			if ( bigBoss.bottomBoundary() )
-			{
-				bigBoss.placeShape();
-
-				//delete filled rows
-				if ( bigBoss.deleteFilledRows() )
-				{
-					// shift all blocks down when a row is deleted
-					bigBoss.shiftBlocksDown();
-				}
-				bigBoss.generateShape();
-
-				// check if game over
-				if ( bigBoss.isEndGame() )
-				{
-					printf( "Game over son" );
-					flag = false;
-				}
-			}
-			else
-			{
-				(bigBoss.board.getCurrentShape())->shiftDown();
-			}
-			sdTimeStamp = current;
-		}
+		glutSetCursor( GLUT_CURSOR_NONE );
+		glutWarpPointer( bigBoss.engine.windowWidth / 2, bigBoss.engine.windowHeight / 2 );
+		bigBoss.playGame();
 	}
-	// redraw 
-	glutPostRedisplay();
+	if ( bigBoss.state == 3 ) // game over menu
+	{
+		glutSetCursor( GLUT_CURSOR_LEFT_ARROW );
+	}
+	if ( bigBoss.state == 4 )
+	{
+		glutExit();
+		exit( 0 );
+	}
+	
+}
+
+void mouse( int button, int state, int x, int y )
+{
+	if ( button == GLUT_LEFT_BUTTON && state == GLUT_DOWN )
+	{
+		bigBoss.processMenu( x, y );
+	}
 }
 
 int main()
@@ -99,11 +55,14 @@ int main()
 	glutDisplayFunc( display );
 	glutKeyboardFunc( keyboard );
 	glutIdleFunc( idle );
+	glutMouseFunc( mouse );
 
 	// load and compile shaders
 	bigBoss.startEngine();
 	bigBoss.generateShape();
-	glTimeStamp = std::chrono::system_clock::now();
+	// log time before starting the infinite loop
+	bigBoss.glTimeStamp = std::chrono::system_clock::now();
+	// start the infinite loop
 	bigBoss.run();
 
 	return 0;

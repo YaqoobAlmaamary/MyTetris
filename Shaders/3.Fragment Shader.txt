@@ -1,0 +1,12 @@
+#version 430 core
+
+out vec4 color;
+in vec2 myTexCoor;
+
+uniform sampler2D ourTexture;
+
+void main()
+{
+	color = texture( ourTexture, myTexCoor );
+	/*color = vec4( 1, 1, 1, 1 );*/
+}

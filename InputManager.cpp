@@ -2,15 +2,14 @@
 
 void InputManager::doMovement( Gameboard* board )
 {
-	Shapes* currentShape = board->getCurrentShape();
 	if ( key[w] )
-		currentShape->rotateCounterClockWise();
+		board->rotateCounterClockWise();
 	if ( key[a] )
-		currentShape->shiftLeft();
+		board->shiftShapeLeft();
 	if ( key[d] )
-		currentShape->shiftRight();
+		board->shiftShapeRight();
 	if ( key[s] )
-		;
+		board->pushShapeDown();
 	
 }
 
@@ -57,3 +56,22 @@ void InputManager::unlogKey( unsigned int key )
 
 	}
 }
+
+int InputManager::processMenu( float x, float y, Menu menu )
+{
+	// iterate through the buttons and check if the click occured 
+	// inside the boundaries of a button in world coordinates, if true return the index
+	// of the clicked button
+
+	for ( int i = 0; i < menu.buttons.size(); i++ )
+	{
+		if( x > menu.buttons[i].x && x < menu.buttons[i].x + menu.buttons[i].width )
+			if ( y < menu.buttons[i].y && y > menu.buttons[i].y - menu.buttons[i].height )
+			{
+				printf( "True\n" );
+				return i;
+			}
+	}
+	return -1;
+}
+

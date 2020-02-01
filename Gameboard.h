@@ -1,5 +1,5 @@
 #pragma once
-#include "Shapes.h"-
+#include "Shapes.h"
 
 class Gameboard
 {
@@ -8,8 +8,7 @@ private:
 	int rows;
 	bool** cell; // order is first row and then column not the way i now think which column and then row
 	Shapes currentShape;
-	bool leftBoundary;
-	bool rightBoundary;
+	Shapes shadow;
 
 public:
 
@@ -63,15 +62,23 @@ public:
 	int getRows();
 	bool** getCells();
 	Shapes* getCurrentShape();
-	bool isLeftBoundary();
-	bool isRightBoundary();
+	Shapes* getShadow();
 
 	void setColumns( int width );
 	void setRows( int height );
-	void setLeftBoundary( bool flag );
-	void setRightBoundary( bool flag );
 
 	void generateShape();
 	void placeShape();
+
+	void pushShapeDown(); // pushes the current shape down more quickly
+	void calculateShadow(); // calculate the shadow position of the current shape
+
+	void shiftShapeRight(); // shifts the current shape to right
+	void shiftShapeLeft(); // shifts the current shape to left
+	void rotateCounterClockWise(); // rotates current shape
+	void shiftShapeDown(); // shifts the current shape down
+
+	void restartBoard();
+
 };
 

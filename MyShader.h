@@ -14,7 +14,7 @@ public:
 	
 
 	void LoadShaders( const char* vertex_file_path, const char* fragment_file_path ) {
-
+		std::string a;
 		// Create the shaders
 		GLuint VertexShaderID = glCreateShader( GL_VERTEX_SHADER );
 		GLuint FragmentShaderID = glCreateShader( GL_FRAGMENT_SHADER );

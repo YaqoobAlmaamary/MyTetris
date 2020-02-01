@@ -20,6 +20,16 @@ void Shapes::shiftRight()
 	pivotLocationColumn++;
 }
 
+void Shapes::shiftDown()
+{
+	for ( int i = 0; i < 4; i++ )
+	{
+		blockLocationRow[i]--;
+	}
+	pivotLocationRow--;
+
+}
+
 void Shapes::rotateCounterClockWise()
 {
 	// we multiply init block location by the rotation matrix 
@@ -48,20 +58,9 @@ void Shapes::rotateClockWise()
 	}
 }
 
-void Shapes::shiftDown()
-{
-	printf( "block Row:%i\n", blockLocationRow[0] );
-	for ( int i = 0; i < 4; i++ )
-	{
-		blockLocationRow[i]--;
-	}
-	pivotLocationRow--;
-	
-}
-
 void Shapes::formalizeShape()
 {
-	type = rand() % 7;
+	type = rand() % 7;                                                                  
 
 	// pivot block( 0, 0 )
 	blockInitColumn[0] = 0;
@@ -75,11 +74,11 @@ void Shapes::formalizeShape()
 		blockInitRow[1] = 0;
 
 		// ( 2, 0 )
-		blockInitColumn[2] = -1;
+		blockInitColumn[2] = 2;
 		blockInitRow[2] = 0;
 
 		// ( -1, 0 )
-		blockInitColumn[3] = -2;
+		blockInitColumn[3] = -1;
 		blockInitRow[3] = 0;
 	}
 
@@ -121,8 +120,8 @@ void Shapes::formalizeShape()
 	if ( type == 3 )
 	{
 		// ( -1, 0 )
-		blockInitColumn[1] = 0;
-		blockInitRow[1] = 1;
+		blockInitColumn[1] = -1;
+		blockInitRow[1] = 0;
 
 		// ( -1, -1 )
 		blockInitColumn[2] = -1;
@@ -155,8 +154,8 @@ void Shapes::formalizeShape()
 	if ( type == 5 )
 	{
 		// ( 1, 0 )
-		blockInitColumn[1] = 0;
-		blockInitRow[1] = 1;
+		blockInitColumn[1] = 1;
+		blockInitRow[1] = 0;
 
 		// ( 0, -1 )
 		blockInitColumn[2] = 0;
